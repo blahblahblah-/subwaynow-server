@@ -5,7 +5,7 @@ class Api::StopsController < ApplicationController
   ADA_ADDITIONAL_STOPS = ENV['ADA_ADDITIONAL_STOPS']&.split(',') || []
 
   def index
-    data = Rails.cache.fetch("stops", expires_in: 10.seconds) do
+    data = Rails.cache.fetch("stops", expires_in: 30.seconds) do
       stops = Scheduled::Stop.all
       futures = {}
       tracks_futures = {}
@@ -95,7 +95,7 @@ class Api::StopsController < ApplicationController
 
   def show
     stop_id = params[:id]
-    data = Rails.cache.fetch("stops:#{stop_id}", expires_in: 10.seconds) do
+    data = Rails.cache.fetch("stops:#{stop_id}", expires_in: 30.seconds) do
       timestamp = Time.current.to_i
       stop = Scheduled::Stop.find_by!(internal_id: stop_id)
       route_stops_futures = {}

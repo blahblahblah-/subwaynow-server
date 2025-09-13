@@ -94,7 +94,9 @@ class FeedProcessor
         translated_trips.each do |trip|
           update_trip(feed_id, timestamp, trip, pipeline)
         end
-        update_trip_stops_data(translated_trips, timestamp, pipeline)
+        if fraction_of_minute == 0
+          update_trip_stops_data(translated_trips, timestamp, pipeline)
+        end
       end
 
       complete_trips(feed_id, timestamp)

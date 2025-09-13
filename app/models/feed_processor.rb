@@ -221,7 +221,7 @@ class FeedProcessor
       supplemented_scheduled_travel_times_map = {}
       route_to_route_stops_set = Set.new
       route_to_route_stop_tracks_set = Set.new
-      trips.each do |trip|
+      trips.filter(&:latest).each do |trip|
         trip.time_between_stops(SUPPLEMENTED_TIME_LOOKUP).each do |station_ids, time|
           supplemented_scheduled_travel_times_map[station_ids] = time if time >= 30
         end

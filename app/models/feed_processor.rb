@@ -94,6 +94,7 @@ class FeedProcessor
         translated_trips.each do |trip|
           update_trip(feed_id, timestamp, trip, pipeline)
         end
+        update_trip_stops_data(translated_trips, timestamp, pipeline)
       end
 
       complete_trips(feed_id, timestamp)
@@ -212,18 +213,37 @@ class FeedProcessor
       return unless trip.latest
       process_stops(trip, pipeline)
       marshaled_trip = Marshal.dump(trip)
-      trip.time_between_stops(SUPPLEMENTED_TIME_LOOKUP).each do |station_ids, time|
-        stop_ids = station_ids.split('-')
-        RedisStore.add_supplemented_scheduled_travel_time(stop_ids.first, stop_ids.second, time, pipeline) if time >= 30
-      end
-      trip.upcoming_stops.each do |stop_id|
-        RedisStore.add_route_to_route_stop(trip.route_id, stop_id, trip.direction, timestamp, pipeline)
-      end
-      trip.tracks.each do |stop_id, track|
-        RedisStore.add_route_to_route_stop_track(trip.route_id, trip.direction, stop_id, track, timestamp, pipeline) if track.present?
-      end
       RedisStore.add_active_trip(feed_id, trip.id, marshaled_trip, pipeline)
       RedisStore.add_to_active_trip_list(feed_id, trip.id, timestamp, pipeline)
+    end
+
+    def update_trip_stops_data(trips, timestamp, pipeline)
+      supplemented_scheduled_travel_times_map = {}
+      route_to_route_stops_set = Set.new
+      route_to_route_stop_tracks_set = Set.new
+      trips.each do |trip|
+        trip.time_between_stops(SUPPLEMENTED_TIME_LOOKUP).each do |station_ids, time|
+          supplemented_scheduled_travel_times_map[station_ids] = time if time >= 30
+        end
+        trip.upcoming_stops.each do |stop_id|
+          route_to_route_stops_set.add([trip.route_id, stop_id, trip.direction])
+        end
+        trip.tracks.each do |stop_id, track|
+          route_to_route_stop_tracks_set.add([trip.route_id, trip.direction, stop_id, track]) if track.present?
+        end
+      end
+
+      supplemented_scheduled_travel_times_map.each do |station_ids, time|
+        stop_ids = station_ids.split('-')
+        RedisStore.add_supplemented_scheduled_travel_time(stop_ids.first, stop_ids.second, time, pipeline)
+      end
+      route_to_route_stops_set.each do |(route_id, stop_id, direction)|
+        RedisStore.add_route_to_route_stop(route_id, stop_id, direction, timestamp, pipeline)
+      end
+
+      route_to_route_stop_tracks_set.each do |(route_id, direction, stop_id, track)|
+        RedisStore.add_route_to_route_stop_track(route_id, direction, stop_id, track, timestamp, pipeline)
+      end
     end
 
     def process_stops(trip, pipeline)

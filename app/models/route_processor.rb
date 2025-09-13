@@ -74,7 +74,6 @@ class RouteProcessor
       scheduled_headways_by_routes = determine_max_scheduled_headway(scheduled_trips, route_id, timestamp)
 
       REDIS_CLIENT.pipelined do |pipeline|
-        update_scheduled_runtimes(scheduled_trips, pipeline)
         persist_processed_trips(route_id, processed_trips, pipeline)
       end
 
@@ -288,17 +287,6 @@ class RouteProcessor
       time_until_first_trip = d.first - current_time
       time_until_first_trip = d.first - (current_time + 24.hours.to_i) if time_until_first_trip > 4.hours.to_i
       [time_until_first_trip] + d.sort.each_cons(2).map { |a,b| b - a }
-    end
-
-    def update_scheduled_runtimes(scheduled_trips, pipeline)
-      scheduled_trips.each do |_, trips|
-        trips.each do |t|
-          t.stop_times.each_cons(2).each do |a_st, b_st|
-            time = b_st.departure_time - a_st.departure_time
-            RedisStore.add_scheduled_travel_time(a_st.stop_internal_id, b_st.stop_internal_id, time, pipeline)
-          end
-        end
-      end
     end
 
     def determine_scheduled_routings(scheduled_trips, timestamp, exclude_past_stops: false)

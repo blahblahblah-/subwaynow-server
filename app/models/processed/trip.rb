@@ -53,8 +53,11 @@ class Processed::Trip
   end
 
   def calculate_time_until_next_trip!(next_trip, routing, feed_timestamp)
+    travel_times_data = RedisStore.travel_times
+    travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
+
     if previous_stop_arrival_time
-      @calculated_upcoming_stop_arrival_time = previous_stop_arrival_time + RouteProcessor.average_travel_time(previous_stop, upcoming_stop)
+      @calculated_upcoming_stop_arrival_time = previous_stop_arrival_time + (travel_times["#{previous_stop}-#{upcoming_stop}"] || RouteProcessor.average_travel_time(previous_stop, upcoming_stop))
     else
       @calculated_upcoming_stop_arrival_time = timestamp + self.class.extrapolate_time_until_upcoming_stop(trip, routing, timestamp)
     end
@@ -68,7 +71,7 @@ class Processed::Trip
       if routing.last == destination
         @estimated_time_until_destination = estimated_time_until_upcoming_stop +
           upcoming_stops[1, upcoming_stops.length - 1].each_cons(2).map { |a_stop, b_stop|
-            RouteProcessor.average_travel_time(a_stop, b_stop) || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || (stops[b_stop] - stops[a_stop])
+            travel_times["#{a_stop}-#{b_stop}"] || RouteProcessor.average_travel_time(a_stop, b_stop) || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || (stops[b_stop] - stops[a_stop])
           }.sum
       end
       return
@@ -77,7 +80,7 @@ class Processed::Trip
     next_trip_previous_stop, next_trip_previous_stop_time = self.class.determine_previous_stop_and_arrival_time(next_trip)
     if next_trip_previous_stop_time
       next_trip_upcoming_stop = next_trip.upcoming_stop
-      estimated_time_for_next_trip_until_its_upcoming_stop = [(next_trip_previous_stop_time + RouteProcessor.average_travel_time(next_trip_previous_stop, next_trip_upcoming_stop)) - timestamp, 0].max || next_trip.time_until_upcoming_stop(time_ref: timestamp)
+      estimated_time_for_next_trip_until_its_upcoming_stop = [(next_trip_previous_stop_time + (travel_times["#{next_trip_previous_stop}-#{next_trip_upcoming_stop}"] || RouteProcessor.average_travel_time(next_trip_previous_stop, next_trip_upcoming_stop))) - timestamp, 0].max || next_trip.time_until_upcoming_stop(time_ref: timestamp)
     else
       estimated_time_for_next_trip_until_its_upcoming_stop = self.class.extrapolate_time_until_upcoming_stop(next_trip, routing, timestamp)
     end
@@ -85,7 +88,7 @@ class Processed::Trip
     if stops_behind(next_trip).present?
       @estimated_time_behind_next_train = [estimated_time_until_upcoming_stop +
         trip.stops_behind(next_trip).each_cons(2).map { |a_stop, b_stop|
-          RouteProcessor.average_travel_time(a_stop, b_stop) || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || (stops[b_stop] - stops[a_stop])
+          travel_times["#{a_stop}-#{b_stop}"] || RouteProcessor.average_travel_time(a_stop, b_stop) || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || (stops[b_stop] - stops[a_stop])
         }.sum -
         estimated_time_for_next_trip_until_its_upcoming_stop, 0].max
       @time_behind_next_train = [time_until_upcoming_stop +

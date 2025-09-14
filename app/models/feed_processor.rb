@@ -15,19 +15,14 @@ class FeedProcessor
   CITY_HALL_STOP = "R24"
 
   class << self
-    def analyze_feed(feed_id, route_id, minutes, fraction_of_minute)
+    def analyze_feed(feed_id, route_id, minutes, fraction_of_minute, feed = nil)
+      return if feed.nil?
       if feed_id != FeedRetrieverSpawningWorkerBase.feed_id_for(route_id)
         puts "Error: #{route_id} does not belong in feed #{feed_id}, skipping"
         return
       end
 
       feed_name = "feed:#{minutes}:#{fraction_of_minute}:#{feed_id}"
-      marshaled_feed = RedisStore.feed(feed_id, minutes, fraction_of_minute)
-      feed = Marshal.load(marshaled_feed) if marshaled_feed
-
-      if !feed
-        raise "Error: #{feed_name} not found"
-      end
 
       return if feed.entity.empty?
 

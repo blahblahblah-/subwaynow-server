@@ -32,7 +32,6 @@ class FeedRetrieverWorker
     end
     timestamp = decoded_data.header.timestamp
     RedisStore.update_feed_timestamp(feed_id, timestamp)
-    RedisStore.add_feed(feed_id, minutes, fraction_of_minute, Marshal.dump(decoded_data))
 
     puts "Retrieved feed #{feed_id}, latency #{Time.current - Time.zone.at(timestamp)}"
     RedisStore.update_feed_latency(feed_id, Time.current - Time.zone.at(timestamp))
@@ -44,7 +43,7 @@ class FeedRetrieverWorker
     }.uniq
 
     route_ids.each do |route_id|
-      FeedProcessorWorker.perform_async(feed_id, route_id, minutes, fraction_of_minute)
+      FeedProcessor.analyze_feed(feed_id, route_id, minutes, fraction_of_minute, decoded_data)
     end
   end
 end

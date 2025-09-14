@@ -459,6 +459,23 @@ class RouteAnalyzer
     end
   end
 
+  def self.accumulated_extra_time_between_stops(actual_routings, processed_trips, timestamp)
+    actual_routings.map { |direction, routings|
+      [direction, routings.map { |r|
+        key = "#{r.first}-#{r.last}-#{r.size}"
+        trips = processed_trips[direction][key]
+        (
+          r.each_cons(2).map { |a_stop, b_stop|
+            scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || 0
+            actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop) || 0
+            diff = actual_travel_time - scheduled_travel_time
+            diff >= 60.0 ? diff : 0
+          }.reduce(&:+) || 0
+        )
+      }.max]
+    }.to_h
+  end
+
   def self.max_delay(actual_trips)
     actual_trips.map { |direction, trips|
       [direction, trips.values.flatten.select{ |t| t.upcoming_stops.size > 1 }.map(&:effective_delayed_time).max]

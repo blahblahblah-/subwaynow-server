@@ -1,8 +1,8 @@
-class FeedRetrieverSpawningWorker < FeedRetrieverSpawningWorkerBase
+class FeedRetrieverSpawningB2Worker < FeedRetrieverSpawningWorkerBase
   include Sidekiq::Worker
   sidekiq_options retry: false, queue: 'critical'
 
-  FEEDS = ["", "-bdfm", "-ace", "-jz", "-nqrw", "-l", "-si", "-g"]
+  FEEDS = ["-jz", "-nqrw", "-l", "-si"]
 
   def perform
     minutes = Time.current.min

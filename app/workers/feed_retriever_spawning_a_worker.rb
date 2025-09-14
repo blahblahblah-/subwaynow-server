@@ -1,12 +1,12 @@
-class FeedRetrieverSpawningWorker < FeedRetrieverSpawningWorkerBase
+class FeedRetrieverSpawningAWorker < FeedRetrieverSpawningWorkerBase
   include Sidekiq::Worker
   sidekiq_options retry: false, queue: 'critical'
 
-  FEEDS = ["", "-bdfm", "-ace", "-jz", "-nqrw", "-l", "-si", "-g"]
+  FEEDS = [""]
 
   def perform
     minutes = Time.current.min
-    fraction_of_minute = Time.current.sec / 15
+    fraction_of_minute = Time.current.sec / 5
     FEEDS.each do |id|
       FeedRetrieverWorker.perform_async(id, minutes, fraction_of_minute)
     end

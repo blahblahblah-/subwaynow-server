@@ -46,19 +46,18 @@ class RouteProcessor
         }]
       }
 
-      routes_with_shared_tracks_futures = {}
+      routes_stop_tracks_data = RedisStore.routes_stop_tracks
+      routes_stop_tracks = routes_stop_tracks_data ? JSON.parse(routes_stop_tracks_data) : {}
 
-      REDIS_CLIENT.pipelined do |pipeline|
-        routes_with_shared_tracks_futures = tracks.to_h { |direction, stops|
-          [direction, stops.to_h { |stop_id, tracks|
-            [stop_id, tracks.map { |t| RedisStore.routes_stop_at_track(stop_id, t, Time.current.to_i, pipeline) }]
-          }]
-        }
-      end
+      routes_with_shared_tracks_data = tracks.to_h { |direction, stops|
+        [direction, stops.to_h { |stop_id, tracks|
+          [stop_id, tracks.map { |t| routes_stop_tracks["#{stop_id}-#{t}"] } ]
+        }]
+      }
 
-      routes_with_shared_tracks = routes_with_shared_tracks_futures.to_h { |direction, stops|
-        [direction, stops.to_h { |stop_id, routes_futures|
-          [stop_id, routes_futures.flat_map { |rf| rf.value }.uniq.group_by { |rv| rv.split(':').first }.to_h { |route_id, rvs| [route_id, rvs.map { |rv| rv.split(':').second == '3' ? :south : :north}]}.filter { |r, _| r != route_id }]
+      routes_with_shared_tracks = routes_with_shared_tracks_data.to_h { |direction, stops|
+        [direction, stops.to_h { |stop_id, routes|
+          [stop_id, routes.flatten.compact.uniq.group_by { |rv| rv.split(':').first }.to_h { |route_id, rvs| [route_id, rvs.map { |rv| rv.split(':').second == '3' ? :south : :north}]}.filter { |r, _| r != route_id }]
         }.filter { |_, routes|
           routes.present?
         }]

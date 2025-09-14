@@ -26,15 +26,18 @@ class FeedRetrieverWorker
       Transit_realtime::FeedMessage.decode(data)
     end
     last_feed_timestamp = RedisStore.feed_timestamp(feed_id)
-    if last_feed_timestamp && last_feed_timestamp == decoded_data.header.timestamp
+    timestamp = decoded_data.header.timestamp
+    puts "Feed #{feed_id} has timestamp #{timestamp}, last timestamp #{last_feed_timestamp}"
+    if last_feed_timestamp.present? && last_feed_timestamp.to_i == timestamp.to_i
       puts "Skipping feed #{feed_id} with timestamp #{last_feed_timestamp} has not been updated"
       return
     end
-    timestamp = decoded_data.header.timestamp
     RedisStore.update_feed_timestamp(feed_id, timestamp)
 
-    puts "Retrieved feed #{feed_id}, latency #{Time.current - Time.zone.at(timestamp)}"
-    RedisStore.update_feed_latency(feed_id, Time.current - Time.zone.at(timestamp))
+    time = Time.zone.at(timestamp)
+    latency = Time.current - time
+    puts "Retrieved feed #{feed_id}, latency #{latency}, timestamp #{time.strftime("%S")}"
+    RedisStore.update_feed_latency(feed_id, latency)
 
     route_ids = decoded_data.entity.select { |entity|
       entity.field?(:trip_update)

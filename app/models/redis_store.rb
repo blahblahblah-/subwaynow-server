@@ -152,14 +152,6 @@ class RedisStore
       client.zrangebyscore("routes-stop-track:#{stop_id}:#{track}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
     end
 
-    def update_routes_stop_tracks(data, client = REDIS_CLIENT)
-      client.set("routes-stop-tracks", data, ex: 1800)
-    end
-
-    def routes_stop_tracks(client = REDIS_CLIENT)
-      client.get("routes-stop-tracks")
-    end
-
     def stop_tracks(client = REDIS_CLIENT)
       client.smembers("stop-tracks")
     end

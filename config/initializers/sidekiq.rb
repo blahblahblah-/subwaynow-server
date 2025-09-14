@@ -19,7 +19,6 @@ Rails.application.reloader.to_prepare do
   Sidekiq::Cron::Job.create(name: 'TwitterServiceChangesNotifierWorker - Every 1 min', cron: '* * * * *', class: 'TwitterServiceChangesNotifierWorker')
   Sidekiq::Cron::Job.create(name: 'HerokuAutoscalerWorker - Every 1 min', cron: '* * * * *', class: 'HerokuAutoscalerWorker')
   Sidekiq::Cron::Job.create(name: 'TravelTimesRefreshWorker - Every 2 min', cron: '*/2 * * * *', class: 'TravelTimesRefreshWorker')
-  Sidekiq::Cron::Job.create(name: 'RouteStopTracksRefreshWorker - Every 2 min', cron: '*/2 * * * *', class: 'RouteStopTracksRefreshWorker')
   Sidekiq::Cron::Job.create(name: 'ScheduledTimesRefreshWorker - Every 5 min', cron: '*/5 * * * *', class: 'ScheduledTimesRefreshWorker')
   Sidekiq::Cron::Job.create(name: 'RedisCleanupWorker - Every 30 mins', cron: '*/30 * * * *', class: 'RedisCleanupWorker')
 end

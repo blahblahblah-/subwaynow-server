@@ -13,6 +13,8 @@ class FeedProcessor
   CANAL_ST_BRIDGE_STOP = "Q01"
   CANAL_ST_TUNNEL_STOP = "R23"
   CITY_HALL_STOP = "R24"
+  ROCKAWAY_PARK_STOP = "H15"
+  FAR_ROCKAWAY_STOP = "H11"
 
   class << self
     def analyze_feed(feed_id, route_id, minutes, fraction_of_minute, feed = nil)
@@ -146,7 +148,7 @@ class FeedProcessor
       is_assigned = entity.trip_update.trip.nyct_trip_descriptor.is_assigned
       interval = entity.trip_update.trip.nyct_trip_descriptor.train_id
 
-      if is_a_shuttle?(route_id, entity)
+      if is_a_shuttle?(route_id, entity) || is_h_shuttle_needs_correction?(route_id, direction, entity)
         entity.trip_update, direction = reverse_trip_update(entity.trip_update)
       end
 
@@ -305,6 +307,12 @@ class FeedProcessor
       route_id == 'A' && entity.trip_update.stop_time_update.present? &&
         ((entity.trip_update.stop_time_update.last.stop_id == 'A55S' && entity.trip_update.stop_time_update[-2] && entity.trip_update.stop_time_update[-2].stop_id =='A57S') ||
             (entity.trip_update.stop_time_update.last.stop_id == 'A65N' && entity.trip_update.stop_time_update[-2] && entity.trip_update.stop_time_update[-2].stop_id =='A64N'))
+    end
+
+    def is_h_shuttle_needs_correction?(route_id, direction, entity)
+      route_id == 'H' &&
+        (direction == Transit_realtime::NyctTripDescriptor::Direction::SOUTH && entity.trip_update.stop_time_update.last.stop_id[0..2] == FAR_ROCKAWAY_STOP) ||
+        (direction == Transit_realtime::NyctTripDescriptor::Direction::NORTH && entity.trip_update.stop_time_update.last.stop_id[0..2] == ROCKAWAY_PARK_STOP)
     end
 
     def reverse_trip_update(trip_update)

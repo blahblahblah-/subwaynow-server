@@ -141,7 +141,7 @@ class RouteProcessor
 
     private
 
-    def trimmed_average(travel_times, ignore_target: 0.1)
+    def trimmed_average(travel_times, ignore_target: 0.2)
       sorted_times = travel_times.sort
       ignore_amount = (sorted_times.count * ignore_target).to_i
       processed_values = sorted_times[ignore_amount..(sorted_times.length-(ignore_amount * 2))]

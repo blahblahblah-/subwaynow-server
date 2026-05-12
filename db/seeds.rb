@@ -272,12 +272,6 @@ Scheduled::BusTransfer.create!(from_stop_internal_id: "B21", bus_route: "B82 SBS
 Scheduled::BusTransfer.create!(from_stop_internal_id: "R44", bus_route: "S79 SBS", min_transfer_time: 180, access_time_from: 18000, access_time_to: 86399)
 Scheduled::BusTransfer.create!(from_stop_internal_id: "S18", bus_route: "S79 SBS", min_transfer_time: 180, access_time_from: 18000, access_time_to: 86399)
 
-Scheduled::BusTransfer.create!(from_stop_internal_id: "710", bus_route: "Q47 to LGA", airport_connection: true, access_time_from: 18000, access_time_to: 86399)
-Scheduled::BusTransfer.create!(from_stop_internal_id: "G14", bus_route: "Q47 to LGA", airport_connection: true, access_time_from: 18000, access_time_to: 86399)
-
-Scheduled::BusTransfer.create!(from_stop_internal_id: "702", bus_route: "Q48 to LGA", airport_connection: true, access_time_from: 18000, access_time_to: 86399)
-Scheduled::BusTransfer.create!(from_stop_internal_id: "701", bus_route: "Q48 to LGA", airport_connection: true, access_time_from: 18000, access_time_to: 86399)
-
 Scheduled::BusTransfer.create!(from_stop_internal_id: "707", bus_route: "Q72 to LGA", airport_connection: true, access_time_from: 18000, access_time_to: 86399)
 Scheduled::BusTransfer.create!(from_stop_internal_id: "G10", bus_route: "Q72 to LGA", airport_connection: true, access_time_from: 18000, access_time_to: 86399)
 
@@ -362,6 +356,14 @@ Scheduled::Connection.create!(from_stop_internal_id: "A07", name: "GWB Bus Stati
 Scheduled::Connection.create!(from_stop_internal_id: "S31", name: "SI Ferry", mode: "ship", min_transfer_time: 300)
 Scheduled::BusTransfer.create!(from_stop_internal_id: "J12", bus_route: "Q10 to JFK", min_transfer_time: 300, airport_connection: true)
 Scheduled::Connection.create!(from_stop_internal_id: "418", name: "PATH", mode: "subway", min_transfer_time: 300)
+
+Scheduled::BusTransfer.create!(from_stop_internal_id: "701", bus_route: "Q90 to LGA", airport_connection: true, access_time_from: 18000, access_time_to: 86399)
+
+Scheduled::BusTransfer.create!(from_stop_internal_id: "710", bus_route: "Q33 to LGA", airport_connection: true)
+Scheduled::BusTransfer.create!(from_stop_internal_id: "709", bus_route: "Q33 to LGA", airport_connection: true)
+Scheduled::BusTransfer.create!(from_stop_internal_id: "G14", bus_route: "Q33 to LGA", airport_connection: true)
+
+Scheduled::BusTransfer.create!(from_stop_internal_id: "J12", bus_route: "Q80 to JFK", airport_connection: true)
 
 csv_text = File.read(Rails.root.join('import', 'Stations.csv'))
 csv = CSV.parse(csv_text, headers: true)
